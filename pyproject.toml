@@ -11,7 +11,6 @@ packages = [{include = "gemini_structured_response_prompts_database"}]
 python = "^3.9"
 fastapi = "^0.104.0"
 sqlalchemy = ">=1.4.42,<1.5"
-sqlalchemy-utils = "^0.41.1"
 pydantic = "^2.5.0"
 databases = "^0.8.0"
 asyncpg = "^0.29.0"
