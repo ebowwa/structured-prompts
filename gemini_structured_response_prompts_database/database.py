@@ -28,6 +28,10 @@ class Database:
             url: Database connection URL. If not provided, uses DATABASE_URL env var
         """
         self.url = url or os.getenv("DATABASE_URL", "sqlite:///./gemini_prompts.db")
+        # Parse the URL to handle PostgreSQL connections properly
+        if self.url.startswith('postgresql'):
+            # Remove sslmode from URL if present
+            self.url = self.url.split('?')[0]
         self.engine = create_engine(self.url)
         
         # Create database if it doesn't exist
