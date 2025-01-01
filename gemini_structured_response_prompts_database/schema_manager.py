@@ -71,7 +71,7 @@ class SchemaManager:
             return PromptResponseDB(**data)
         raise ValueError(f"Unknown model type: {type(pydantic_model)}")
 
-    async def get_prompt_schema(self, prompt_type: str) -> PromptSchema:
+    def get_prompt_schema(self, prompt_type: str) -> PromptSchema:
         """
         Get a prompt schema by type
         
@@ -88,7 +88,7 @@ class SchemaManager:
             if not self.database:
                 raise ValueError("Database not initialized")
                 
-            db_schema = await self.database.get_schema(prompt_type)
+            db_schema = self.database.get_schema(prompt_type)
             if not db_schema:
                 raise ValueError(f"Schema not found for type: {prompt_type}")
                 
@@ -101,7 +101,7 @@ class SchemaManager:
                 detail=f"Schema not found for type: {prompt_type}"
             )
 
-    async def create_prompt_schema(
+    def create_prompt_schema(
         self,
         prompt_type: str,
         prompt_text: str,
@@ -142,7 +142,7 @@ class SchemaManager:
                 raise ValueError("Database not initialized")
                 
             # Save to database
-            await self.database.create_schema(db_schema)
+            self.database.create_schema(db_schema)
             
             return pydantic_schema
             
@@ -159,7 +159,7 @@ class SchemaManager:
                 detail=f"Failed to create schema: {str(e)}"
             )
 
-    async def update_prompt_schema(
+    def update_prompt_schema(
         self,
         prompt_type: str,
         prompt_text: Optional[str] = None,
@@ -186,7 +186,7 @@ class SchemaManager:
                 raise ValueError("Database not initialized")
                 
             # Get existing schema
-            existing_schema = await self.get_prompt_schema(prompt_type)
+            existing_schema = self.get_prompt_schema(prompt_type)
             if not existing_schema:
                 raise ValueError(f"Schema not found: {prompt_type}")
                 
@@ -203,7 +203,7 @@ class SchemaManager:
             
             # Convert to DB model and save
             db_schema = self._pydantic_to_db(updated_schema)
-            await self.database.update_schema(db_schema)
+            self.database.update_schema(db_schema)
             
             return updated_schema
             
@@ -214,7 +214,7 @@ class SchemaManager:
                 detail=f"Failed to update schema: {str(e)}"
             )
 
-    async def delete_prompt_schema(self, prompt_type: str) -> bool:
+    def delete_prompt_schema(self, prompt_type: str) -> bool:
         """
         Delete a prompt schema
         
@@ -231,7 +231,7 @@ class SchemaManager:
             if not self.database:
                 raise ValueError("Database not initialized")
                 
-            success = await self.database.delete_schema(prompt_type)
+            success = self.database.delete_schema(prompt_type)
             if not success:
                 raise ValueError(f"Failed to delete schema: {prompt_type}")
                 

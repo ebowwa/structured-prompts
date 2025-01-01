@@ -7,10 +7,8 @@ from typing import Dict, List, Optional, Union, Any
 from pydantic import BaseModel, Field, validator
 from sqlalchemy import Column, String, Integer, Text, Boolean, Float, JSON, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import DeclarativeBase
 
-class Base(DeclarativeBase):
-    pass
+Base = declarative_base()
 
 # SQLAlchemy Models
 class PromptSchemaDB(Base):
