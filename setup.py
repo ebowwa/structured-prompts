@@ -7,11 +7,13 @@ setup(
     install_requires=[
         "fastapi>=0.100.0",
         "pydantic>=2.0.0",
-        "sqlalchemy>=2.0.0",
+        "sqlalchemy>=2.0.25",
+        "sqlalchemy[asyncio]>=2.0.25",
         "databases>=0.9.0",
         "sqlalchemy-utils>=0.41.1",
-        "asyncpg",  # For PostgreSQL support
-        "aiosqlite"  # For SQLite support
+        "asyncpg>=0.29.0",
+        "aiosqlite>=0.19.0",
+        "greenlet>=3.0.3"
     ],
     python_requires=">=3.9",
 )
