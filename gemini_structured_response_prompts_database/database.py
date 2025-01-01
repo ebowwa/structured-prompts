@@ -7,6 +7,8 @@ import os
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy_utils import JSONType, create_database, database_exists
 
 from .models import Base, PromptSchemaDB, PromptResponseDB
@@ -28,67 +30,77 @@ class Database:
             url: Database connection URL. If not provided, uses DATABASE_URL env var
         """
         self.url = url or os.getenv("DATABASE_URL", "sqlite:///./gemini_prompts.db")
-        # Parse the URL to handle PostgreSQL connections properly
-        if self.url.startswith('postgresql'):
+        
+        # Convert PostgreSQL URL to async format if needed
+        if self.url.startswith('postgresql://'):
+            self.url = self.url.replace('postgresql://', 'postgresql+asyncpg://')
             # Remove sslmode from URL if present
             self.url = self.url.split('?')[0]
-        self.engine = create_engine(self.url)
+            self.engine = create_async_engine(self.url)
+            self.SessionLocal = async_sessionmaker(bind=self.engine, class_=AsyncSession)
+        else:
+            # For SQLite or other databases, use synchronous connection
+            self.engine = create_engine(self.url)
+            self.SessionLocal = sessionmaker(bind=self.engine)
         
         # Create database if it doesn't exist
         if not database_exists(self.url):
             create_database(self.url)
         
         Base.metadata.bind = self.engine
-        self.SessionLocal = sessionmaker(bind=self.engine)
         
-    def connect(self):
+    async def connect(self):
         """Connect to database and create tables"""
-        create_tables(self.engine)
+        async with self.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
     
-    def disconnect(self):
+    async def disconnect(self):
         """Disconnect from database"""
-        pass
+        await self.engine.dispose()
     
     def get_session(self) -> Session:
         """Get database session"""
         return self.SessionLocal()
     
-    def get_schema(self, prompt_type: str) -> Optional[PromptSchemaDB]:
+    async def get_schema(self, prompt_type: str) -> Optional[PromptSchemaDB]:
         """Get prompt schema by type"""
-        session = self.get_session()
-        result = session.query(PromptSchemaDB).filter_by(prompt_id=prompt_type).first()
-        return result
+        async with self.get_session() as session:
+            result = await session.query(PromptSchemaDB).filter(PromptSchemaDB.prompt_type == prompt_type).first()
+            return result
     
-    def create_schema(self, schema: PromptSchemaDB) -> bool:
+    async def create_schema(self, schema: PromptSchemaDB) -> PromptSchemaDB:
         """Create new prompt schema"""
-        session = self.get_session()
-        session.add(schema)
-        session.commit()
-        return True
-    
-    def update_schema(self, schema: PromptSchemaDB) -> bool:
-        """Update existing prompt schema"""
-        session = self.get_session()
-        session.merge(schema)
-        session.commit()
-        return True
-    
-    def delete_schema(self, prompt_type: str) -> bool:
-        """Delete prompt schema"""
-        session = self.get_session()
-        result = session.query(PromptSchemaDB).filter_by(prompt_id=prompt_type).delete()
-        session.commit()
-        return result > 0
-    
-    def get_response(self, response_id: str) -> Optional[PromptResponseDB]:
-        """Get prompt response by ID"""
-        session = self.get_session()
-        result = session.query(PromptResponseDB).filter_by(response_id=response_id).first()
-        return result
+        async with self.get_session() as session:
+            session.add(schema)
+            await session.commit()
+            await session.refresh(schema)
+            return schema
             
-    def create_response(self, response: PromptResponseDB) -> bool:
+    async def update_schema(self, schema: PromptSchemaDB) -> PromptSchemaDB:
+        """Update existing prompt schema"""
+        async with self.get_session() as session:
+            result = await session.merge(schema)
+            await session.commit()
+            return result
+            
+    async def delete_schema(self, prompt_type: str):
+        """Delete prompt schema"""
+        async with self.get_session() as session:
+            schema = await session.query(PromptSchemaDB).filter(PromptSchemaDB.prompt_type == prompt_type).first()
+            if schema:
+                await session.delete(schema)
+                await session.commit()
+                
+    async def get_response(self, response_id: str) -> Optional[PromptResponseDB]:
+        """Get prompt response by ID"""
+        async with self.get_session() as session:
+            result = await session.query(PromptResponseDB).filter(PromptResponseDB.id == response_id).first()
+            return result
+            
+    async def create_response(self, response: PromptResponseDB) -> PromptResponseDB:
         """Create new prompt response"""
-        session = self.get_session()
-        session.add(response)
-        session.commit()
-        return True
+        async with self.get_session() as session:
+            session.add(response)
+            await session.commit()
+            await session.refresh(response)
+            return response

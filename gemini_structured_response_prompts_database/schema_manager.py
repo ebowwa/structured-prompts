@@ -71,7 +71,7 @@ class SchemaManager:
             return PromptResponseDB(**data)
         raise ValueError(f"Unknown model type: {type(pydantic_model)}")
 
-    def get_prompt_schema(self, prompt_type: str) -> PromptSchema:
+    async def get_prompt_schema(self, prompt_type: str) -> PromptSchema:
         """
         Get a prompt schema by type
         
@@ -85,23 +85,15 @@ class SchemaManager:
             HTTPException: If schema not found
         """
         try:
-            if not self.database:
-                raise ValueError("Database not initialized")
-                
-            db_schema = self.database.get_schema(prompt_type)
-            if not db_schema:
-                raise ValueError(f"Schema not found for type: {prompt_type}")
-                
-            return self._db_to_pydantic(db_schema)
-            
+            result = await self.database.get_schema(prompt_type)
+            if not result:
+                raise HTTPException(status_code=404, detail=f"Schema not found for type: {prompt_type}")
+            return self._db_to_pydantic(result)
         except Exception as e:
-            logger.error(f"Error getting prompt schema: {str(e)}")
-            raise HTTPException(
-                status_code=404,
-                detail=f"Schema not found for type: {prompt_type}"
-            )
+            logger.error(f"Error getting schema: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to get schema: {str(e)}")
 
-    def create_prompt_schema(
+    async def create_prompt_schema(
         self,
         prompt_type: str,
         prompt_text: str,
@@ -124,42 +116,22 @@ class SchemaManager:
             HTTPException: If schema creation fails
         """
         try:
-            schema_data = {
-                "prompt_id": prompt_type,  # Using prompt_type as ID
-                "prompt_title": prompt_type,
-                "main_prompt": prompt_text,
-                "response_schema": response_schema,
+            schema = PromptSchema(
+                prompt_type=prompt_type,
+                prompt_text=prompt_text,
+                response_schema=response_schema,
                 **kwargs
-            }
-            
-            # Create Pydantic model first for validation
-            pydantic_schema = PromptSchema(**schema_data)
-            
-            # Convert to DB model
-            db_schema = self._pydantic_to_db(pydantic_schema)
-            
-            if not self.database:
-                raise ValueError("Database not initialized")
-                
-            # Save to database
-            self.database.create_schema(db_schema)
-            
-            return pydantic_schema
-            
+            )
+            db_schema = self._pydantic_to_db(schema)
+            result = await self.database.create_schema(db_schema)
+            return self._db_to_pydantic(result)
         except ValidationError as e:
-            logger.error(f"Schema validation error: {str(e)}")
-            raise HTTPException(
-                status_code=422,
-                detail=f"Invalid schema configuration: {str(e)}"
-            )
+            raise HTTPException(status_code=422, detail=str(e))
         except Exception as e:
-            logger.error(f"Error creating prompt schema: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to create schema: {str(e)}"
-            )
+            logger.error(f"Error creating schema: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to create schema: {str(e)}")
 
-    def update_prompt_schema(
+    async def update_prompt_schema(
         self,
         prompt_type: str,
         prompt_text: Optional[str] = None,
@@ -182,39 +154,28 @@ class SchemaManager:
             HTTPException: If update fails
         """
         try:
-            if not self.database:
-                raise ValueError("Database not initialized")
-                
-            # Get existing schema
-            existing_schema = self.get_prompt_schema(prompt_type)
-            if not existing_schema:
-                raise ValueError(f"Schema not found: {prompt_type}")
-                
-            # Update fields
-            update_data = existing_schema.model_dump()
-            if prompt_text:
-                update_data["main_prompt"] = prompt_text
-            if response_schema:
-                update_data["response_schema"] = response_schema
-            update_data.update(kwargs)
+            existing = await self.database.get_schema(prompt_type)
+            if not existing:
+                raise HTTPException(status_code=404, detail=f"Schema not found for type: {prompt_type}")
             
-            # Create new Pydantic model with updates
-            updated_schema = PromptSchema(**update_data)
+            update_data = {
+                "prompt_type": prompt_type,
+                "prompt_text": prompt_text or existing.prompt_text,
+                "response_schema": response_schema or existing.response_schema,
+                **kwargs
+            }
             
-            # Convert to DB model and save
-            db_schema = self._pydantic_to_db(updated_schema)
-            self.database.update_schema(db_schema)
-            
-            return updated_schema
-            
+            schema = PromptSchema(**update_data)
+            db_schema = self._pydantic_to_db(schema)
+            result = await self.database.update_schema(db_schema)
+            return self._db_to_pydantic(result)
+        except ValidationError as e:
+            raise HTTPException(status_code=422, detail=str(e))
         except Exception as e:
-            logger.error(f"Error updating prompt schema: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to update schema: {str(e)}"
-            )
+            logger.error(f"Error updating schema: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to update schema: {str(e)}")
 
-    def delete_prompt_schema(self, prompt_type: str) -> bool:
+    async def delete_prompt_schema(self, prompt_type: str) -> bool:
         """
         Delete a prompt schema
         
@@ -228,18 +189,8 @@ class SchemaManager:
             HTTPException: If deletion fails
         """
         try:
-            if not self.database:
-                raise ValueError("Database not initialized")
-                
-            success = self.database.delete_schema(prompt_type)
-            if not success:
-                raise ValueError(f"Failed to delete schema: {prompt_type}")
-                
+            await self.database.delete_schema(prompt_type)
             return True
-            
         except Exception as e:
-            logger.error(f"Error deleting prompt schema: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to delete schema: {str(e)}"
-            )
+            logger.error(f"Error deleting schema: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to delete schema: {str(e)}")
