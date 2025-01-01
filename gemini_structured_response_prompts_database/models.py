@@ -6,49 +6,47 @@ import time
 from typing import Dict, List, Optional, Union, Any
 from pydantic import BaseModel, Field, validator
 from sqlalchemy import Column, String, Integer, Text, Boolean, Float, JSON, ForeignKey
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import declarative_base, relationship
 
-class Base(DeclarativeBase):
-    """Base class for SQLAlchemy models"""
-    pass
+Base = declarative_base()
 
 # SQLAlchemy Models
 class PromptSchemaDB(Base):
     """SQLAlchemy model for prompt configuration"""
     __tablename__ = 'prompt_schemas'
 
-    prompt_id: Mapped[str] = mapped_column(String, primary_key=True)
-    prompt_title: Mapped[str] = mapped_column(String, nullable=False)
-    prompt_description: Mapped[Optional[str]] = mapped_column(Text)
-    prompt_categories: Mapped[List[str]] = mapped_column(JSON)
-    main_prompt: Mapped[str] = mapped_column(Text, nullable=False)
-    model_instruction: Mapped[Optional[str]] = mapped_column(Text)
-    additional_messages: Mapped[Optional[List[Dict[str, str]]]] = mapped_column(JSON)
-    response_schema: Mapped[Dict] = mapped_column(JSON, nullable=False)
-    is_public: Mapped[bool] = mapped_column(Boolean, default=False)
-    ranking: Mapped[float] = mapped_column(Float, default=0.0)
-    last_used: Mapped[Optional[int]] = mapped_column(Integer)
-    usage_count: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[int] = mapped_column(Integer, nullable=False, default=lambda: int(time.time()))
-    created_by: Mapped[Optional[str]] = mapped_column(String)
-    last_updated: Mapped[Optional[int]] = mapped_column(Integer)
-    last_updated_by: Mapped[Optional[str]] = mapped_column(String)
-    provider_configs: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
+    prompt_id = Column(String, primary_key=True)
+    prompt_title = Column(String, nullable=False)
+    prompt_description = Column(Text)
+    prompt_categories = Column(JSON)
+    main_prompt = Column(Text, nullable=False)
+    model_instruction = Column(Text)
+    additional_messages = Column(JSON)
+    response_schema = Column(JSON, nullable=False)
+    is_public = Column(Boolean, default=False)
+    ranking = Column(Float, default=0.0)
+    last_used = Column(Integer)
+    usage_count = Column(Integer, default=0)
+    created_at = Column(Integer, nullable=False, default=lambda: int(time.time()))
+    created_by = Column(String)
+    last_updated = Column(Integer)
+    last_updated_by = Column(String)
+    provider_configs = Column(JSON)
 
     # Relationship to responses
-    responses: Mapped[List["PromptResponseDB"]] = relationship(back_populates="schema")
+    responses = relationship("PromptResponseDB", back_populates="schema")
 
 class PromptResponseDB(Base):
     """SQLAlchemy model for prompt responses"""
     __tablename__ = 'prompt_responses'
 
-    response_id: Mapped[str] = mapped_column(String, primary_key=True)
-    prompt_id: Mapped[str] = mapped_column(String, ForeignKey("prompt_schemas.prompt_id"), nullable=False)
-    raw_response: Mapped[Dict] = mapped_column(JSON, nullable=False)
-    created_at: Mapped[int] = mapped_column(Integer, nullable=False, default=lambda: int(time.time()))
+    response_id = Column(String, primary_key=True)
+    prompt_id = Column(String, ForeignKey("prompt_schemas.prompt_id"), nullable=False)
+    raw_response = Column(JSON, nullable=False)
+    created_at = Column(Integer, nullable=False, default=lambda: int(time.time()))
 
     # Relationship to schema
-    schema: Mapped["PromptSchemaDB"] = relationship(back_populates="responses")
+    schema = relationship("PromptSchemaDB", back_populates="responses")
 
 # Pydantic Models
 class PromptSchema(BaseModel):
