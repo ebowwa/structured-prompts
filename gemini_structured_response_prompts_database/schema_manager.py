@@ -27,7 +27,7 @@ class SchemaManager:
     DEFAULT_RESPONSE_SCHEMA = {
         "type": "object",
         "description": "Dynamic response schema - define based on your needs",
-        "additionalProperties": True  # Allows any additional properties
+        "additionalProperties": True
     }
     
     def __init__(
@@ -38,16 +38,7 @@ class SchemaManager:
         default_prompt_text: Optional[str] = None,
         default_response_schema: Optional[Dict] = None
     ):
-        """
-        Initialize SchemaManager with optional custom database and defaults
-        
-        Args:
-            database: Optional custom database instance
-            table: Optional custom table for storing schemas
-            default_prompt_type: Optional custom default prompt type
-            default_prompt_text: Optional custom default prompt text
-            default_response_schema: Optional custom default response schema
-        """
+        """Initialize SchemaManager with optional custom database and defaults"""
         self.database = database
         self.table = table
         self.default_prompt_type = default_prompt_type or self.DEFAULT_PROMPT_TYPE
@@ -61,7 +52,7 @@ class SchemaManager:
         elif isinstance(db_model, PromptResponseDB):
             return PromptResponse.model_validate(db_model)
         raise ValueError(f"Unknown model type: {type(db_model)}")
-
+    
     def _pydantic_to_db(self, pydantic_model: Union[PromptSchema, PromptResponse]) -> Union[PromptSchemaDB, PromptResponseDB]:
         """Convert Pydantic model to SQLAlchemy model"""
         data = pydantic_model.model_dump()
@@ -72,18 +63,7 @@ class SchemaManager:
         raise ValueError(f"Unknown model type: {type(pydantic_model)}")
 
     async def get_prompt_schema(self, prompt_type: str) -> PromptSchema:
-        """
-        Get a prompt schema by type
-        
-        Args:
-            prompt_type: Type identifier for the prompt schema
-            
-        Returns:
-            PromptSchema: The prompt schema configuration
-            
-        Raises:
-            HTTPException: If schema not found
-        """
+        """Get a prompt schema by type"""
         try:
             result = await self.database.get_schema(prompt_type)
             if not result:
@@ -100,26 +80,13 @@ class SchemaManager:
         response_schema: Dict,
         **kwargs
     ) -> PromptSchema:
-        """
-        Create a new prompt schema
-        
-        Args:
-            prompt_type: Type identifier for the prompt
-            prompt_text: The prompt text/template
-            response_schema: JSON schema for validating responses
-            **kwargs: Additional schema configuration options
-            
-        Returns:
-            PromptSchema: The created schema configuration
-            
-        Raises:
-            HTTPException: If schema creation fails
-        """
+        """Create a new prompt schema"""
         try:
             schema = PromptSchema(
                 prompt_type=prompt_type,
                 prompt_text=prompt_text,
                 response_schema=response_schema,
+                created_at=int(datetime.now().timestamp()),
                 **kwargs
             )
             db_schema = self._pydantic_to_db(schema)
@@ -138,21 +105,7 @@ class SchemaManager:
         response_schema: Optional[Dict] = None,
         **kwargs
     ) -> PromptSchema:
-        """
-        Update an existing prompt schema
-        
-        Args:
-            prompt_type: Type identifier for the prompt
-            prompt_text: Optional new prompt text
-            response_schema: Optional new response schema
-            **kwargs: Additional update fields
-            
-        Returns:
-            PromptSchema: The updated schema configuration
-            
-        Raises:
-            HTTPException: If update fails
-        """
+        """Update an existing prompt schema"""
         try:
             existing = await self.database.get_schema(prompt_type)
             if not existing:
@@ -162,6 +115,7 @@ class SchemaManager:
                 "prompt_type": prompt_type,
                 "prompt_text": prompt_text or existing.prompt_text,
                 "response_schema": response_schema or existing.response_schema,
+                "updated_at": int(datetime.now().timestamp()),
                 **kwargs
             }
             
@@ -176,18 +130,7 @@ class SchemaManager:
             raise HTTPException(status_code=500, detail=f"Failed to update schema: {str(e)}")
 
     async def delete_prompt_schema(self, prompt_type: str) -> bool:
-        """
-        Delete a prompt schema
-        
-        Args:
-            prompt_type: Type identifier for the prompt
-            
-        Returns:
-            bool: True if deletion successful
-            
-        Raises:
-            HTTPException: If deletion fails
-        """
+        """Delete a prompt schema"""
         try:
             await self.database.delete_schema(prompt_type)
             return True

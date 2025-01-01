@@ -6,55 +6,56 @@ import time
 from typing import Dict, List, Optional, Union, Any
 from pydantic import BaseModel, Field, validator
 from sqlalchemy import Column, String, Integer, Text, Boolean, Float, JSON, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-Base = declarative_base()
+class Base(DeclarativeBase):
+    """Base class for SQLAlchemy models"""
+    pass
 
 # SQLAlchemy Models
 class PromptSchemaDB(Base):
-    """
-    SQLAlchemy model for prompt configuration
-    """
+    """SQLAlchemy model for prompt configuration"""
     __tablename__ = 'prompt_schemas'
 
-    prompt_id = Column(String, primary_key=True)
-    prompt_title = Column(String, nullable=False)
-    prompt_description = Column(Text)
-    prompt_categories = Column(JSON)
-    main_prompt = Column(Text, nullable=False)
-    model_instruction = Column(Text)
-    additional_messages = Column(JSON)
-    response_schema = Column(JSON, nullable=False)
-    is_public = Column(Boolean, default=False)
-    ranking = Column(Float, default=0.0)
-    last_used = Column(Integer)
-    usage_count = Column(Integer, default=0)
-    created_at = Column(Integer, nullable=False)
-    created_by = Column(String)
-    last_updated = Column(Integer)
-    last_updated_by = Column(String)
-    provider_configs = Column(JSON)
+    prompt_id: Mapped[str] = mapped_column(String, primary_key=True)
+    prompt_title: Mapped[str] = mapped_column(String, nullable=False)
+    prompt_description: Mapped[Optional[str]] = mapped_column(Text)
+    prompt_categories: Mapped[List[str]] = mapped_column(JSON)
+    main_prompt: Mapped[str] = mapped_column(Text, nullable=False)
+    model_instruction: Mapped[Optional[str]] = mapped_column(Text)
+    additional_messages: Mapped[Optional[List[Dict[str, str]]]] = mapped_column(JSON)
+    response_schema: Mapped[Dict] = mapped_column(JSON, nullable=False)
+    is_public: Mapped[bool] = mapped_column(Boolean, default=False)
+    ranking: Mapped[float] = mapped_column(Float, default=0.0)
+    last_used: Mapped[Optional[int]] = mapped_column(Integer)
+    usage_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[int] = mapped_column(Integer, nullable=False, default=lambda: int(time.time()))
+    created_by: Mapped[Optional[str]] = mapped_column(String)
+    last_updated: Mapped[Optional[int]] = mapped_column(Integer)
+    last_updated_by: Mapped[Optional[str]] = mapped_column(String)
+    provider_configs: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
+
+    # Relationship to responses
+    responses: Mapped[List["PromptResponseDB"]] = relationship(back_populates="schema")
 
 class PromptResponseDB(Base):
-    """
-    SQLAlchemy model for prompt responses
-    """
+    """SQLAlchemy model for prompt responses"""
     __tablename__ = 'prompt_responses'
 
-    response_id = Column(String, primary_key=True)
-    prompt_id = Column(String, ForeignKey("prompt_schemas.prompt_id"), nullable=False)
-    raw_response = Column(JSON, nullable=False)
-    created_at = Column(Integer, nullable=False)
+    response_id: Mapped[str] = mapped_column(String, primary_key=True)
+    prompt_id: Mapped[str] = mapped_column(String, ForeignKey("prompt_schemas.prompt_id"), nullable=False)
+    raw_response: Mapped[Dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[int] = mapped_column(Integer, nullable=False, default=lambda: int(time.time()))
+
+    # Relationship to schema
+    schema: Mapped["PromptSchemaDB"] = relationship(back_populates="responses")
 
 # Pydantic Models
 class PromptSchema(BaseModel):
-    """
-    Universal schema for prompt configuration across different LLM providers.
-    Designed to be provider-agnostic while maintaining flexibility for provider-specific features.
-    """
+    """Pydantic model for prompt schema validation"""
     prompt_id: str = Field(..., description="Unique identifier for this prompt")
     prompt_title: str = Field(..., description="Human-readable title for the prompt", alias="prompt_type")
-    prompt_description: str = Field("", description="Detailed description of the prompt's purpose and usage")
+    prompt_description: Optional[str] = Field("", description="Detailed description of the prompt's purpose and usage")
     prompt_categories: List[str] = Field(default_factory=list, description="Categories/tags for organizing prompts")
     main_prompt: str = Field(..., description="The primary prompt/instruction text", alias="prompt_text")
     model_instruction: Optional[str] = Field(None, description="Specific instructions for model behavior")
@@ -81,10 +82,7 @@ class PromptSchema(BaseModel):
         from_attributes = True
 
 class PromptResponse(BaseModel):
-    """
-    Dynamic response model that can handle arbitrary response structures.
-    The actual schema is defined by the response_schema field in PromptSchema.
-    """
+    """Pydantic model for prompt response validation"""
     response_id: str = Field(..., description="Unique identifier for this response")
     prompt_id: str = Field(..., description="Reference to the prompt that generated this response")
     raw_response: Dict[str, Any] = Field(..., description="Raw response data with arbitrary structure")
