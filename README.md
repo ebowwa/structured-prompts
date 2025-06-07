@@ -75,13 +75,14 @@ DATABASE_URL=postgresql://user:password@db.supabase.co:5432/dbname?sslmode=requi
 ## Quick Start
 
 ```python
-from gemini_prompt_schema import SchemaManager, PromptSchema, PromptResponse
+from gemini_structured_response_prompts_database import SchemaManager, Database, PromptSchema, PromptResponse
 
 # Initialize with your database connection
-schema_manager = SchemaManager(database_url="postgresql://user:pass@localhost/db")
+db = Database(url="postgresql://user:pass@localhost/db")
+schema_manager = SchemaManager(database=db)
 
 # Create a new prompt schema
-await schema_manager.create_config(
+await schema_manager.create_prompt_schema(
     prompt_type="sentiment_analysis",
     prompt_text="Analyze the sentiment of this text.",
     response_schema={
@@ -96,7 +97,7 @@ await schema_manager.create_config(
 )
 
 # Use in your application
-prompt_text = await schema_manager.get_prompt_text("sentiment_analysis")
+prompt_schema = await schema_manager.get_prompt_schema("sentiment_analysis")
 ```
 
 ## Advanced Usage
@@ -104,10 +105,10 @@ prompt_text = await schema_manager.get_prompt_text("sentiment_analysis")
 ### Custom Schema Types
 
 ```python
-from gemini_prompt_schema import SchemaManager
+from gemini_structured_response_prompts_database import SchemaManager
 
 # Create a complex analysis schema
-await schema_manager.create_config(
+await schema_manager.create_prompt_schema(
     prompt_type="content_analysis",
     prompt_text="Perform a detailed analysis of this content.",
     response_schema={
@@ -147,7 +148,7 @@ await schema_manager.create_config(
 
 ```python
 # Custom database configuration
-from gemini_prompt_schema import Database
+from gemini_structured_response_prompts_database import Database
 
 db = Database(
     url="postgresql://user:pass@localhost/db",
@@ -159,12 +160,12 @@ schema_manager = SchemaManager(database=db)
 
 # Batch operations
 async def migrate_schemas(old_type: str, new_type: str):
-    old_config = await schema_manager.get_config(old_type)
-    if old_config:
-        await schema_manager.create_config(
+    old_schema = await schema_manager.get_prompt_schema(old_type)
+    if old_schema:
+        await schema_manager.create_prompt_schema(
             prompt_type=new_type,
-            prompt_text=old_config["prompt_text"],
-            response_schema=old_config["response_schema"]
+            prompt_text=old_schema.prompt_text,
+            response_schema=old_schema.response_schema
         )
 ```
 
