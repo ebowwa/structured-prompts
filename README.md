@@ -75,15 +75,22 @@ DATABASE_URL=postgresql://user:password@db.supabase.co:5432/dbname?sslmode=requi
 ## Quick Start
 
 ```python
-from gemini_prompt_schema import SchemaManager, PromptSchema, PromptResponse
+from gemini_structured_response_prompts_database import (
+    SchemaManager,
+    PromptSchema,
+)
+from gemini_structured_response_prompts_database.database import Database
 
 # Initialize with your database connection
-schema_manager = SchemaManager(database_url="postgresql://user:pass@localhost/db")
+db = Database(url="postgresql://user:pass@localhost/db")
+schema_manager = SchemaManager(database=db)
 
 # Create a new prompt schema
-await schema_manager.create_config(
+await schema_manager.create_prompt_schema(
     prompt_type="sentiment_analysis",
     prompt_text="Analyze the sentiment of this text.",
+    model_instruction="Respond in JSON format.",
+    additional_messages=[{"role": "system", "content": "Use concise summaries."}],
     response_schema={
         "type": "object",
         "properties": {
@@ -95,19 +102,35 @@ await schema_manager.create_config(
     }
 )
 
-# Use in your application
-prompt_text = await schema_manager.get_prompt_text("sentiment_analysis")
+# Retrieve the schema later
+prompt_schema = await schema_manager.get_prompt_schema("sentiment_analysis")
 ```
 
+### PromptSchema Fields
+
+`PromptSchema` instances include several attributes for managing metadata and
+additional instructions:
+
+- `prompt_title`: human-readable title for the prompt
+- `prompt_description`: detailed description of the prompt
+- `main_prompt`: primary text shown to the model
+- `model_instruction`: optional instructions for model behaviour
+- `additional_messages`: optional list of `{role, content}` messages
+- `response_schema`: JSON schema describing the expected response
+- `is_public`: flag to expose the prompt publicly
+- `ranking`: numeric rating for effectiveness
+- `last_used` / `usage_count`: tracking statistics
+- `created_at` / `created_by`: creation metadata
+- `last_updated` / `last_updated_by`: update metadata
 ## Advanced Usage
 
 ### Custom Schema Types
 
 ```python
-from gemini_prompt_schema import SchemaManager
+from gemini_structured_response_prompts_database import SchemaManager
 
 # Create a complex analysis schema
-await schema_manager.create_config(
+await schema_manager.create_prompt_schema(
     prompt_type="content_analysis",
     prompt_text="Perform a detailed analysis of this content.",
     response_schema={
@@ -147,7 +170,7 @@ await schema_manager.create_config(
 
 ```python
 # Custom database configuration
-from gemini_prompt_schema import Database
+from gemini_structured_response_prompts_database.database import Database
 
 db = Database(
     url="postgresql://user:pass@localhost/db",
@@ -159,9 +182,9 @@ schema_manager = SchemaManager(database=db)
 
 # Batch operations
 async def migrate_schemas(old_type: str, new_type: str):
-    old_config = await schema_manager.get_config(old_type)
+    old_config = await schema_manager.get_prompt_schema(old_type)
     if old_config:
-        await schema_manager.create_config(
+        await schema_manager.create_prompt_schema(
             prompt_type=new_type,
             prompt_text=old_config["prompt_text"],
             response_schema=old_config["response_schema"]
