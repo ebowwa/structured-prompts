@@ -49,6 +49,29 @@ A powerful and modular package for managing structured prompts with Google's Gem
 pip install gemini-prompt-schema  # Coming soon
 ```
 
+## Configuration
+
+Copy `.env.template` to `.env` and set the `DATABASE_URL` variable to match your
+database connection string:
+
+```bash
+cp .env.template .env
+# Edit .env and adjust DATABASE_URL
+```
+
+If `DATABASE_URL` is unset, the package defaults to `sqlite:///./gemini_prompts.db`.
+
+### Environment Variables
+
+Currently the only environment variable recognized by the package is `DATABASE_URL`. This value sets the
+database connection string for SQLAlchemy and falls back to the default SQLite database if not provided.
+You can supply any SQLAlchemy-compatible connection string. For hosted PostgreSQL services such as
+Supabase, set `DATABASE_URL` to the connection URL they provide, for example:
+
+```
+DATABASE_URL=postgresql://user:password@db.supabase.co:5432/dbname?sslmode=require
+```
+
 ## Quick Start
 
 ```python
