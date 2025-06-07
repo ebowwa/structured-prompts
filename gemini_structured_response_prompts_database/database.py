@@ -2,32 +2,35 @@
 Database interface and utilities
 """
 
-from typing import Optional, Dict, Any, List
 import os
 import re
-from urllib.parse import urlparse, parse_qs
-from sqlalchemy import create_engine, MetaData, text
+from typing import Any, Dict, List, Optional
+from urllib.parse import parse_qs, urlparse
+
+from sqlalchemy import MetaData, create_engine, text
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy_utils import JSONType, create_database, database_exists
 
-from .models import Base, PromptSchemaDB, PromptResponseDB
+from .models import Base, PromptResponseDB, PromptSchemaDB
 
 metadata = MetaData()
+
 
 async def create_tables(engine):
     """Create database tables"""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+
 class Database:
     """Database connection and operations wrapper"""
-    
+
     def __init__(self, url: Optional[str] = None):
         """Initialize database connection"""
         self.url = url or os.getenv("DATABASE_URL", "sqlite:///./gemini_prompts.db")
-        
+
         # Clean and transform the URL
         if self.url.startswith("sqlite"):
             self.url = self.url.replace("sqlite:", "sqlite+aiosqlite:")
@@ -35,30 +38,28 @@ class Database:
             # Parse the URL
             parsed = urlparse(self.url)
             query_params = parse_qs(parsed.query)
-            
+
             # Remove sslmode from query parameters
-            if 'sslmode' in query_params:
-                del query_params['sslmode']
-            
+            if "sslmode" in query_params:
+                del query_params["sslmode"]
+
             # Reconstruct the URL without sslmode
             netloc = parsed.netloc
-            if '@' not in netloc and ':' in netloc:
+            if "@" not in netloc and ":" in netloc:
                 # Add username if not present
                 netloc = f"postgres@{netloc}"
-            
+
             # Build the new URL
             self.url = f"postgresql+asyncpg://{netloc}{parsed.path}"
-            
+
             # Add back any remaining query parameters
             if query_params:
                 query_string = "&".join(f"{k}={v[0]}" for k, v in query_params.items())
                 self.url = f"{self.url}?{query_string}"
-        
+
         self.engine = create_async_engine(self.url, echo=True)
         self.async_session = sessionmaker(
-            bind=self.engine,
-            class_=AsyncSession,
-            expire_on_commit=False
+            bind=self.engine, class_=AsyncSession, expire_on_commit=False
         )
 
     async def connect(self):
@@ -84,17 +85,17 @@ class Database:
                     create_database(self.url)
             else:
                 raise e
-        
+
         await create_tables(self.engine)
 
     async def disconnect(self):
         """Close database connection"""
         await self.engine.dispose()
 
-    async def get_schema(self, prompt_type: str) -> Optional[PromptSchemaDB]:
-        """Get a prompt schema by type"""
+    async def get_schema(self, prompt_id: str) -> Optional[PromptSchemaDB]:
+        """Get a prompt schema by ID"""
         async with self.async_session() as session:
-            result = await session.get(PromptSchemaDB, prompt_type)
+            result = await session.get(PromptSchemaDB, prompt_id)
             return result
 
     async def create_schema(self, schema: PromptSchemaDB) -> PromptSchemaDB:
@@ -113,10 +114,10 @@ class Database:
             await session.refresh(result)
             return result
 
-    async def delete_schema(self, prompt_type: str) -> bool:
+    async def delete_schema(self, prompt_id: str) -> bool:
         """Delete a prompt schema"""
         async with self.async_session() as session:
-            schema = await session.get(PromptSchemaDB, prompt_type)
+            schema = await session.get(PromptSchemaDB, prompt_id)
             if schema:
                 await session.delete(schema)
                 await session.commit()
@@ -128,7 +129,7 @@ class Database:
         async with self.async_session() as session:
             result = await session.get(PromptResponseDB, response_id)
             return result
-            
+
     async def create_response(self, response: PromptResponseDB) -> PromptResponseDB:
         """Create new prompt response"""
         async with self.async_session() as session:
