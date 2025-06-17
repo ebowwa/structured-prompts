@@ -45,11 +45,12 @@ class SchemaManager:
         self.table = table
         self.default_prompt_type = default_prompt_type or self.DEFAULT_PROMPT_TYPE
         self.default_prompt_text = default_prompt_text or self.DEFAULT_PROMPT_TEXT
-        self.default_response_schema = default_response_schema or self.DEFAULT_RESPONSE_SCHEMA
         self.default_response_schema = (
             default_response_schema or self.DEFAULT_RESPONSE_SCHEMA
         )
-
+        self.default_response_schema = (
+            default_response_schema or self.DEFAULT_RESPONSE_SCHEMA
+        )
 
     def _db_to_pydantic(
         self, db_model: Union[PromptSchemaDB, PromptResponseDB]
@@ -77,7 +78,9 @@ class SchemaManager:
         try:
             result = await self.database.get_schema(prompt_id)
             if not result:
-                raise HTTPException(status_code=404, detail=f"Schema not found for id: {prompt_id}")
+                raise HTTPException(
+                    status_code=404, detail=f"Schema not found for id: {prompt_id}"
+                )
                 raise HTTPException(
                     status_code=404, detail=f"Schema not found for type: {prompt_type}"
                 )
@@ -129,16 +132,14 @@ class SchemaManager:
         response_schema: Optional[Dict] = None,
         model_instruction: Optional[str] = None,
         additional_messages: Optional[List[Dict[str, str]]] = None,
-
         **kwargs,
     ) -> PromptSchema:
         """Update an existing prompt schema"""
         try:
             existing = await self.database.get_schema(prompt_id)
             if not existing:
-                raise HTTPException(status_code=404, detail=f"Schema not found for id: {prompt_id}")
                 raise HTTPException(
-                    status_code=404, detail=f"Schema not found for type: {prompt_type}"
+                    status_code=404, detail=f"Schema not found for id: {prompt_id}"
                 )
 
             update_data = {
