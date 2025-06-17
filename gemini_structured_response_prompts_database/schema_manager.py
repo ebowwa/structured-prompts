@@ -81,9 +81,6 @@ class SchemaManager:
                 raise HTTPException(
                     status_code=404, detail=f"Schema not found for id: {prompt_id}"
                 )
-                raise HTTPException(
-                    status_code=404, detail=f"Schema not found for type: {prompt_type}"
-                )
             return self._db_to_pydantic(result)
         except Exception as e:
             logger.error(f"Error getting schema: {str(e)}")
