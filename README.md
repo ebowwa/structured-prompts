@@ -122,6 +122,26 @@ additional instructions:
 - `last_used` / `usage_count`: tracking statistics
 - `created_at` / `created_by`: creation metadata
 - `last_updated` / `last_updated_by`: update metadata
+
+## Using as a plugin
+
+Install the package directly from GitHub:
+
+```bash
+pip install git+https://github.com/yourusername/gemini-structured-response-prompts-database.git
+```
+
+Initialize the package in another project:
+
+```python
+from gemini_structured_response_prompts_database.database import Database
+from gemini_structured_response_prompts_database import SchemaManager
+
+db = Database(url="postgresql://user:pass@localhost/db")
+schema_manager = SchemaManager(database=db)
+```
+
+Now you can manage prompt schemas using `schema_manager`.
 ## Advanced Usage
 
 ### Custom Schema Types
