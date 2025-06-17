@@ -89,9 +89,9 @@ class SchemaManager:
             )
 
     async def create_prompt_schema(
-        self, prompt_id: str, prompt_title: str, prompt_text: str, response_schema: Dict, **kwargs
         self,
-        prompt_type: str,
+        prompt_id: str,
+        prompt_title: str,
         prompt_text: str,
         response_schema: Dict,
         model_instruction: Optional[str] = None,
@@ -102,7 +102,7 @@ class SchemaManager:
         try:
             schema = PromptSchema(
                 prompt_id=prompt_id,
-                prompt_type=prompt_title,
+                prompt_title=prompt_title,
                 prompt_text=prompt_text,
                 response_schema=response_schema,
                 model_instruction=model_instruction,
