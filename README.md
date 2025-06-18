@@ -46,7 +46,7 @@ A powerful and modular package for managing structured prompts with Google's Gem
 ## Installation
 
 ```bash
-pip install gemini-prompt-schema  # Coming soon
+pip install gemini-structured-response-prompts-database  # Coming soon
 ```
 
 ## Configuration
@@ -122,6 +122,24 @@ additional instructions:
 - `last_used` / `usage_count`: tracking statistics
 - `created_at` / `created_by`: creation metadata
 - `last_updated` / `last_updated_by`: update metadata
+
+## Project Structure
+
+The codebase is organized into a few key modules:
+
+- **`database.py`** – Async wrapper around SQLAlchemy that handles engine
+  creation, connection checks and automatic database creation. It exposes
+  convenience methods like `create_schema`, `get_schema` and similar for
+  `PromptSchemaDB` and `PromptResponseDB` models.
+- **`models.py`** – Defines the SQLAlchemy models and matching Pydantic models
+  (`PromptSchema` and `PromptResponse`) used for validation and data transfer.
+- **`schema_manager.py`** – High level manager that converts between Pydantic
+  and SQLAlchemy objects, performing CRUD operations and providing helpful
+  error handling.
+- **`__init__.py`** – Exports `SchemaManager` along with the Pydantic models as
+  the public API for the package.
+- **`tests/`** – Contains a small pytest suite demonstrating SQLite based
+  integration tests.
 
 ## Using as a plugin
 
@@ -231,7 +249,7 @@ poetry run pytest
 
 ## Contributing
 
-We welcome contributions! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on:
+We welcome contributions! Contributor guidelines will be added soon. Highlights include:
 - Code style
 - Development process
 - Testing requirements
@@ -239,7 +257,7 @@ We welcome contributions! Please read our [Contributing Guidelines](CONTRIBUTING
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## Acknowledgments
 
