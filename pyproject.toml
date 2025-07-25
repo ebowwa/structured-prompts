@@ -7,6 +7,9 @@ license = "MIT"
 readme = "README.md"
 packages = [{include = "src"}]
 
+[tool.poetry.scripts]
+structured-prompts-mcp = "src.interfaces.mcp:main"
+
 [tool.poetry.dependencies]
 python = "^3.9"
 fastapi = "^0.104.0"
@@ -14,6 +17,7 @@ sqlalchemy = ">=1.4.42,<1.5"
 pydantic = "^2.5.0"
 databases = "^0.8.0"
 asyncpg = "^0.29.0"
+mcp = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
