@@ -32,6 +32,9 @@ class PromptSchemaDB(Base):
     last_updated = Column(Integer)
     last_updated_by = Column(String)
     provider_configs = Column(JSON)
+    model_capabilities = Column(JSON)
+    input_schema = Column(JSON)
+    system_prompts = Column(JSON)
 
     # Relationship to responses
     responses = relationship("PromptResponseDB", back_populates="schema")
@@ -73,6 +76,18 @@ class PromptSchema(BaseModel):
     provider_configs: Optional[Dict[str, Any]] = Field(
         default_factory=dict,
         description="Provider-specific configurations"
+    )
+    model_capabilities: Optional[Dict[str, Any]] = Field(
+        default_factory=dict,
+        description="Model-specific capabilities and requirements"
+    )
+    input_schema: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="JSON schema for validating user inputs"
+    )
+    system_prompts: Optional[List[Dict[str, Any]]] = Field(
+        default_factory=list,
+        description="Collection of system prompts with conditions"
     )
 
     class Config:

@@ -14,6 +14,8 @@ import mcp.types as types
 from ..database import Database
 from ..models import PromptSchemaDB
 from ..schema_manager import SchemaManager
+from ..model_capabilities import get_model_config, should_use_thinking_mode
+from ..input_validation import validate_user_input, InputValidation
 
 
 class MCPInterface:
@@ -49,6 +51,9 @@ class MCPInterface:
                             "response_schema": {"type": "object", "description": "JSON schema for response validation"},
                             "system_instructions": {"type": "string", "description": "System instructions for the LLM"},
                             "context": {"type": "string", "description": "Additional context for the prompt"},
+                            "model_capabilities": {"type": "object", "description": "Model-specific capabilities"},
+                            "input_schema": {"type": "object", "description": "Schema for validating user inputs"},
+                            "system_prompts": {"type": "array", "description": "Collection of conditional system prompts"},
                         },
                         "required": ["prompt_id", "prompt_title", "main_prompt", "response_schema"]
                     }
