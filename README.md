@@ -1,6 +1,6 @@
-# Gemini Structured Response Prompts Database
+# Structured Prompts
 
-A powerful and modular package for managing structured prompts with Google's Gemini API. This package provides a database-agnostic interface for storing, retrieving, and managing prompt schemas with structured response validation, specifically designed for large-scale applications requiring consistent prompt management and response validation.
+A powerful and modular package for managing structured prompts with any LLM API. This package provides a database-agnostic interface for storing, retrieving, and managing prompt schemas with structured response validation, specifically designed for large-scale applications requiring consistent prompt management and response validation.
 
 ## Key Features
 
@@ -46,7 +46,7 @@ A powerful and modular package for managing structured prompts with Google's Gem
 ## Installation
 
 ```bash
-pip install gemini-structured-response-prompts-database  # Coming soon
+pip install structured-prompts  # Coming soon
 ```
 
 ## Configuration
@@ -59,7 +59,7 @@ cp .env.template .env
 # Edit .env and adjust DATABASE_URL
 ```
 
-If `DATABASE_URL` is unset, the package defaults to `sqlite:///./gemini_prompts.db`.
+If `DATABASE_URL` is unset, the package defaults to `sqlite:///./structured_prompts.db`.
 
 ### Environment Variables
 
@@ -75,11 +75,11 @@ DATABASE_URL=postgresql://user:password@db.supabase.co:5432/dbname?sslmode=requi
 ## Quick Start
 
 ```python
-from gemini_structured_response_prompts_database import (
+from src import (
     SchemaManager,
     PromptSchema,
 )
-from gemini_structured_response_prompts_database.database import Database
+from src.database import Database
 
 # Initialize with your database connection
 db = Database(url="postgresql://user:pass@localhost/db")
@@ -146,14 +146,14 @@ The codebase is organized into a few key modules:
 Install the package directly from GitHub:
 
 ```bash
-pip install git+https://github.com/yourusername/gemini-structured-response-prompts-database.git
+pip install git+https://github.com/ebowwa/structured-prompts.git
 ```
 
 Initialize the package in another project:
 
 ```python
-from gemini_structured_response_prompts_database.database import Database
-from gemini_structured_response_prompts_database import SchemaManager
+from src.database import Database
+from src import SchemaManager
 
 db = Database(url="postgresql://user:pass@localhost/db")
 schema_manager = SchemaManager(database=db)
@@ -165,7 +165,7 @@ Now you can manage prompt schemas using `schema_manager`.
 ### Custom Schema Types
 
 ```python
-from gemini_structured_response_prompts_database import SchemaManager
+from src import SchemaManager
 
 # Create a complex analysis schema
 await schema_manager.create_prompt_schema(
@@ -208,7 +208,7 @@ await schema_manager.create_prompt_schema(
 
 ```python
 # Custom database configuration
-from gemini_structured_response_prompts_database.database import Database
+from src.database import Database
 
 db = Database(
     url="postgresql://user:pass@localhost/db",
@@ -233,8 +233,8 @@ async def migrate_schemas(old_type: str, new_type: str):
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/gemini-structured-response-prompts-database.git
-cd gemini-structured-response-prompts-database
+git clone https://github.com/ebowwa/structured-prompts.git
+cd structured-prompts
 ```
 
 2. Install dependencies:
@@ -261,6 +261,6 @@ This project is licensed under the MIT License.
 
 ## Acknowledgments
 
-- Google's Gemini API team for their excellent documentation
+- The open source community for their contributions
 - FastAPI community for inspiration on API design
 - SQLAlchemy team for the robust database toolkit

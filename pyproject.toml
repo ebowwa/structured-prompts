@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "gemini_structured_response_prompts_database"
+name = "structured_prompts"
 version = "0.1.0"
-description = "A modular package for managing structured prompts with Google's Gemini API"
+description = "A modular package for managing structured prompts with any LLM API"
 authors = ["Your Name <your.email@example.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "gemini_structured_response_prompts_database"}]
+packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"

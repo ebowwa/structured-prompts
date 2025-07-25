@@ -6,8 +6,8 @@ import pytest_asyncio
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from gemini_structured_response_prompts_database.database import Database
-from gemini_structured_response_prompts_database.models import PromptSchemaDB
+from src.database import Database
+from src.models import PromptSchemaDB
 
 @pytest_asyncio.fixture
 async def db():
