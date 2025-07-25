@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Setup script for gemini-prompt-schema package
+# Setup script for structured-prompts package
 
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}Setting up gemini-prompt-schema package...${NC}"
+echo -e "${GREEN}Setting up structured-prompts package...${NC}"
 
 # Check if poetry is installed
 if ! command -v poetry &> /dev/null; then
