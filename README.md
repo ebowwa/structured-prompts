@@ -1,13 +1,15 @@
 # Structured Prompts
 
-A powerful and modular package for managing structured prompts with any LLM API. This package provides a database-agnostic interface for storing, retrieving, and managing prompt schemas with structured response validation, specifically designed for large-scale applications requiring consistent prompt management and response validation.
+A powerful and modular package for managing structured prompts with any LLM API. This package provides a database-agnostic interface for storing, retrieving, and managing prompt schemas with model-specific optimizations, input validation, and structured response validation. Designed for large-scale applications requiring consistent prompt management across different AI models.
 
 ## Key Features
 
 ### Core Functionality
 - Database-agnostic schema management with SQLAlchemy support
-- Default and custom prompt types with versioning
+- Model-specific optimizations (thinking mode, special tokens)
+- Input validation before sending to LLMs
 - JSON schema validation for responses
+- MCP (Model Context Protocol) server integration
 - Async/await support with high performance
 - FastAPI integration ready
 - Extensible design patterns
@@ -19,10 +21,12 @@ A powerful and modular package for managing structured prompts with any LLM API.
 - Custom prompt type support
 - Schema validation and enforcement
 
-### Response Validation
+### Input & Response Validation
+- User input validation with JSON schemas
+- Text constraints (length, patterns, forbidden content)
+- Code syntax validation
 - Structured response validation using JSON Schema
-- Custom validation rules support
-- Error handling and reporting
+- Custom validation rules and error messages
 - Response type enforcement
 - Schema evolution support
 
@@ -38,10 +42,18 @@ A powerful and modular package for managing structured prompts with any LLM API.
 
 ### API Integration
 - FastAPI endpoints for schema management
+- MCP server for LLM client integration
 - RESTful API for CRUD operations
 - Swagger/OpenAPI documentation
 - Rate limiting support
 - Authentication ready
+
+### Model-Specific Features
+- Support for model capabilities detection
+- Automatic thinking mode optimization
+- Special token handling (Claude, GPT, Gemini)
+- Model-specific prompt formatting
+- Smart routing based on capabilities
 
 ## Installation
 
@@ -74,36 +86,108 @@ DATABASE_URL=postgresql://user:password@db.supabase.co:5432/dbname?sslmode=requi
 
 ## Quick Start
 
+### Basic Usage
+
 ```python
-from src import (
-    SchemaManager,
-    PromptSchema,
-)
+from src import SchemaManager, PromptSchema
 from src.database import Database
 
 # Initialize with your database connection
 db = Database(url="postgresql://user:pass@localhost/db")
 schema_manager = SchemaManager(database=db)
 
-# Create a new prompt schema
+# Create a prompt with input validation
 await schema_manager.create_prompt_schema(
-    prompt_type="sentiment_analysis",
-    prompt_text="Analyze the sentiment of this text.",
-    model_instruction="Respond in JSON format.",
-    additional_messages=[{"role": "system", "content": "Use concise summaries."}],
+    prompt_type="code_analysis",
+    prompt_text="Analyze this code and explain what it does.",
+    input_schema={
+        "type": "object",
+        "properties": {
+            "code": {"type": "string"},
+            "language": {"type": "string", "enum": ["python", "javascript", "go"]}
+        },
+        "required": ["code", "language"]
+    },
     response_schema={
         "type": "object",
         "properties": {
-            "sentiment": {"type": "string", "enum": ["positive", "negative", "neutral"]},
-            "confidence": {"type": "number"},
-            "explanation": {"type": "string"}
+            "explanation": {"type": "string"},
+            "complexity": {"type": "string", "enum": ["low", "medium", "high"]},
+            "suggestions": {"type": "array", "items": {"type": "string"}}
         },
-        "required": ["sentiment", "confidence"]
+        "required": ["explanation", "complexity"]
+    }
+)
+```
+
+### Model-Specific Optimization
+
+```python
+from src.model_capabilities import ModelCapability, PromptOptimization
+
+# Create a prompt optimized for thinking models
+await schema_manager.create_prompt_schema(
+    prompt_type="complex_reasoning",
+    prompt_text="Solve this step-by-step mathematical proof.",
+    model_capabilities={
+        "prefer_thinking_mode": True,
+        "thinking_instruction": "Work through this systematically",
+        "optimal_models": ["o1", "claude-3-opus"]
+    },
+    system_prompts=[
+        {
+            "id": "think_deeply",
+            "content": "Take your time to think through each step carefully",
+            "condition": {"capability_required": "thinking"}
+        }
+    ]
+)
+
+# The system automatically adds thinking tags for capable models
+```
+
+### Input Validation
+
+```python
+# Validate user input before sending to LLM
+from src.input_validation import validate_user_input, InputValidation
+
+validation_config = InputValidation(
+    input_type="json",
+    json_schema={
+        "type": "object",
+        "properties": {
+            "query": {"type": "string", "minLength": 10},
+            "max_results": {"type": "integer", "minimum": 1, "maximum": 100}
+        },
+        "required": ["query"]
     }
 )
 
-# Retrieve the schema later
-prompt_schema = await schema_manager.get_prompt_schema("sentiment_analysis")
+result = validate_user_input(user_data, validation_config)
+if not result.is_valid:
+    print(f"Input errors: {result.errors}")
+```
+
+### MCP Server Usage
+
+```bash
+# Run the MCP server
+structured-prompts-mcp
+
+# Or with custom database
+DATABASE_URL=postgresql://user:pass@localhost/prompts structured-prompts-mcp
+```
+
+Configure your MCP client:
+```json
+{
+  "mcpServers": {
+    "prompts": {
+      "command": "structured-prompts-mcp"
+    }
+  }
+}
 ```
 
 ### PromptSchema Fields
@@ -117,6 +201,9 @@ additional instructions:
 - `model_instruction`: optional instructions for model behaviour
 - `additional_messages`: optional list of `{role, content}` messages
 - `response_schema`: JSON schema describing the expected response
+- `input_schema`: JSON schema for validating user inputs
+- `model_capabilities`: model-specific optimizations and requirements
+- `system_prompts`: conditional system prompts based on model capabilities
 - `is_public`: flag to expose the prompt publicly
 - `ranking`: numeric rating for effectiveness
 - `last_used` / `usage_count`: tracking statistics
