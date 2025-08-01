@@ -58,7 +58,7 @@ A powerful and modular package for managing structured prompts with any LLM API.
 ## Installation
 
 ```bash
-pip install structured-prompts  # Coming soon
+pip install structured-prompts
 ```
 
 ## Configuration
@@ -89,8 +89,8 @@ DATABASE_URL=postgresql://user:password@db.supabase.co:5432/dbname?sslmode=requi
 ### Basic Usage
 
 ```python
-from src import SchemaManager, PromptSchema
-from src.database import Database
+from structured_prompts import SchemaManager, PromptSchema
+from structured_prompts.database import Database
 
 # Initialize with your database connection
 db = Database(url="postgresql://user:pass@localhost/db")
@@ -98,8 +98,11 @@ schema_manager = SchemaManager(database=db)
 
 # Create a prompt with input validation
 await schema_manager.create_prompt_schema(
-    prompt_type="code_analysis",
-    prompt_text="Analyze this code and explain what it does.",
+    prompt_id="code_analysis",
+    prompt_title="Code Analysis",
+    prompt_description="Analyze code and explain its functionality",
+    main_prompt="Analyze this code and explain what it does.",
+    prompt_categories=["code", "analysis"],
     input_schema={
         "type": "object",
         "properties": {
@@ -123,12 +126,15 @@ await schema_manager.create_prompt_schema(
 ### Model-Specific Optimization
 
 ```python
-from src.model_capabilities import ModelCapability, PromptOptimization
+from structured_prompts.model_capabilities import ModelCapability, PromptOptimization
 
 # Create a prompt optimized for thinking models
 await schema_manager.create_prompt_schema(
-    prompt_type="complex_reasoning",
-    prompt_text="Solve this step-by-step mathematical proof.",
+    prompt_id="complex_reasoning",
+    prompt_title="Complex Reasoning Task",
+    prompt_description="Mathematical proof requiring deep thinking",
+    main_prompt="Solve this step-by-step mathematical proof.",
+    prompt_categories=["reasoning", "mathematics"],
     model_capabilities={
         "prefer_thinking_mode": True,
         "thinking_instruction": "Work through this systematically",
@@ -137,8 +143,14 @@ await schema_manager.create_prompt_schema(
     system_prompts=[
         {
             "id": "think_deeply",
+            "name": "Deep Thinking Mode",
             "content": "Take your time to think through each step carefully",
-            "condition": {"capability_required": "thinking"}
+            "priority": 1,
+            "condition": {
+                "capability_required": "thinking",
+                "always_apply": False
+            },
+            "token_format": "plain"
         }
     ]
 )
@@ -150,7 +162,7 @@ await schema_manager.create_prompt_schema(
 
 ```python
 # Validate user input before sending to LLM
-from src.input_validation import validate_user_input, InputValidation
+from structured_prompts.input_validation import validate_user_input, InputValidation
 
 validation_config = InputValidation(
     input_type="json",
@@ -195,17 +207,20 @@ Configure your MCP client:
 `PromptSchema` instances include several attributes for managing metadata and
 additional instructions:
 
-- `prompt_title`: human-readable title for the prompt
+- `prompt_id`: unique identifier for the prompt (required)
+- `prompt_title`: human-readable title for the prompt (required)
 - `prompt_description`: detailed description of the prompt
-- `main_prompt`: primary text shown to the model
+- `prompt_categories`: list of category tags for organization
+- `main_prompt`: primary text shown to the model (required)
 - `model_instruction`: optional instructions for model behaviour
 - `additional_messages`: optional list of `{role, content}` messages
-- `response_schema`: JSON schema describing the expected response
+- `response_schema`: JSON schema describing the expected response (required)
 - `input_schema`: JSON schema for validating user inputs
-- `model_capabilities`: model-specific optimizations and requirements
-- `system_prompts`: conditional system prompts based on model capabilities
-- `is_public`: flag to expose the prompt publicly
-- `ranking`: numeric rating for effectiveness
+- `model_capabilities`: model-specific optimizations and requirements (JSON)
+- `system_prompts`: conditional system prompts based on model capabilities (JSON)
+- `provider_configs`: provider-specific configurations (JSON)
+- `is_public`: flag to expose the prompt publicly (default: False)
+- `ranking`: numeric rating for effectiveness (default: 0.0)
 - `last_used` / `usage_count`: tracking statistics
 - `created_at` / `created_by`: creation metadata
 - `last_updated` / `last_updated_by`: update metadata
@@ -239,8 +254,8 @@ pip install git+https://github.com/ebowwa/structured-prompts.git
 Initialize the package in another project:
 
 ```python
-from src.database import Database
-from src import SchemaManager
+from structured_prompts.database import Database
+from structured_prompts import SchemaManager
 
 db = Database(url="postgresql://user:pass@localhost/db")
 schema_manager = SchemaManager(database=db)
@@ -252,12 +267,15 @@ Now you can manage prompt schemas using `schema_manager`.
 ### Custom Schema Types
 
 ```python
-from src import SchemaManager
+from structured_prompts import SchemaManager
 
 # Create a complex analysis schema
 await schema_manager.create_prompt_schema(
-    prompt_type="content_analysis",
-    prompt_text="Perform a detailed analysis of this content.",
+    prompt_id="content_analysis",
+    prompt_title="Content Analysis",
+    prompt_description="Detailed content analysis with sentiment and insights",
+    main_prompt="Perform a detailed analysis of this content.",
+    prompt_categories=["analysis", "sentiment"],
     response_schema={
         "type": "object",
         "properties": {
@@ -295,7 +313,7 @@ await schema_manager.create_prompt_schema(
 
 ```python
 # Custom database configuration
-from src.database import Database
+from structured_prompts.database import Database
 
 db = Database(
     url="postgresql://user:pass@localhost/db",
@@ -306,13 +324,17 @@ db = Database(
 schema_manager = SchemaManager(database=db)
 
 # Batch operations
-async def migrate_schemas(old_type: str, new_type: str):
-    old_config = await schema_manager.get_prompt_schema(old_type)
+async def migrate_schemas(old_id: str, new_id: str):
+    old_config = await schema_manager.get_prompt_schema(old_id)
     if old_config:
         await schema_manager.create_prompt_schema(
-            prompt_type=new_type,
-            prompt_text=old_config["prompt_text"],
-            response_schema=old_config["response_schema"]
+            prompt_id=new_id,
+            prompt_title=old_config["prompt_title"] + " (Migrated)",
+            prompt_description=old_config.get("prompt_description", ""),
+            main_prompt=old_config["main_prompt"],
+            response_schema=old_config["response_schema"],
+            input_schema=old_config.get("input_schema"),
+            model_capabilities=old_config.get("model_capabilities")
         )
 ```
 

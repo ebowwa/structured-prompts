@@ -1,11 +1,24 @@
 [tool.poetry]
-name = "structured_prompts"
-version = "0.1.0"
+name = "structured-prompts"
+version = "0.1.1"
 description = "A modular package for managing structured prompts with any LLM API"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["ebowwa <your.email@example.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [{include = "src"}]
+homepage = "https://github.com/ebowwa/structured-prompts"
+repository = "https://github.com/ebowwa/structured-prompts"
+keywords = ["prompts", "llm", "structured", "api", "mcp"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
 
 [tool.poetry.scripts]
 structured-prompts-mcp = "src.interfaces.mcp:main"
