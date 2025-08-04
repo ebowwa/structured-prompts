@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="structured-prompts",
-    version="0.1.1",
+    version="0.1.2",
     author="ebowwa",
     author_email="your.email@example.com",
     description="A modular package for managing structured prompts with any LLM API",
@@ -26,12 +26,12 @@ setup(
     ],
     python_requires=">=3.9",
     install_requires=[
-        "fastapi>=0.104.0",
+        "fastapi>=0.110.0",
         "sqlalchemy>=1.4.42,<1.5",
         "sqlalchemy-utils>=0.41.0",
         "pydantic>=2.5.0",
         "databases>=0.8.0",
-        "asyncpg>=0.29.0",
+        "asyncpg>=0.30.0",
         "mcp>=1.0.0",
     ],
     entry_points={

@@ -4,7 +4,7 @@ Pydantic models for schema validation with SQLAlchemy integration
 
 import time
 from typing import Dict, List, Optional, Union, Any
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from sqlalchemy import Column, String, Integer, Text, Boolean, Float, JSON, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship
 
@@ -55,23 +55,23 @@ class PromptResponseDB(Base):
 class PromptSchema(BaseModel):
     """Pydantic model for prompt schema validation"""
     prompt_id: str = Field(..., description="Unique identifier for this prompt")
-    prompt_title: str = Field(..., description="Human-readable title for the prompt", alias="prompt_type")
+    prompt_type: str = Field(..., description="Type/category of the prompt")
     prompt_description: Optional[str] = Field("", description="Detailed description of the prompt's purpose and usage")
     prompt_categories: List[str] = Field(default_factory=list, description="Categories/tags for organizing prompts")
-    main_prompt: str = Field(..., description="The primary prompt/instruction text", alias="prompt_text")
+    prompt_text: str = Field(..., description="The primary prompt/instruction text")
     model_instruction: Optional[str] = Field(None, description="Specific instructions for model behavior")
     additional_messages: Optional[List[Dict[str, str]]] = Field(
         default=None,
         description="Additional context messages in role:content format"
     )
-    response_schema: Dict = Field(..., description="JSON schema for validating responses")
+    response_schema: Optional[Dict] = Field(default_factory=dict, description="JSON schema for validating responses")
     is_public: bool = Field(default=False, description="Whether this prompt is publicly accessible")
     ranking: float = Field(default=0.0, description="Prompt effectiveness ranking (0-1)")
     last_used: Optional[int] = Field(None, description="Timestamp of last usage")
     usage_count: int = Field(default=0, description="Number of times this prompt has been used")
     created_at: int = Field(default_factory=lambda: int(time.time()), description="Creation timestamp")
     created_by: Optional[str] = Field(None, description="User ID of creator")
-    last_updated: Optional[int] = Field(None, description="Last update timestamp", alias="updated_at")
+    last_updated: Optional[int] = Field(None, description="Last update timestamp")
     last_updated_by: Optional[str] = Field(None, description="User ID of last updater")
     provider_configs: Optional[Dict[str, Any]] = Field(
         default_factory=dict,
@@ -90,23 +90,26 @@ class PromptSchema(BaseModel):
         description="Collection of system prompts with conditions"
     )
 
-    class Config:
-        allow_population_by_field_name = True
-        from_attributes = True
+    model_config = ConfigDict(
+        populate_by_name=True,
+        from_attributes=True
+    )
 
 class PromptResponse(BaseModel):
     """Pydantic model for prompt response validation"""
-    response_id: str = Field(..., description="Unique identifier for this response")
-    prompt_id: str = Field(..., description="Reference to the prompt that generated this response")
-    raw_response: Dict[str, Any] = Field(..., description="Raw response data with arbitrary structure")
+    response_id: Optional[str] = Field(default_factory=lambda: f"resp_{int(time.time()*1000)}", description="Unique identifier for this response")
+    prompt_id: Optional[str] = Field(default=None, description="Reference to the prompt that generated this response")
+    raw_response: Dict[str, Any] = Field(default_factory=dict, description="Raw response data with arbitrary structure")
     created_at: int = Field(default_factory=lambda: int(time.time()), description="Response creation timestamp")
 
-    class Config:
-        extra = "allow"
-        from_attributes = True
+    model_config = ConfigDict(
+        extra="allow",
+        from_attributes=True
+    )
 
-    @validator('raw_response')
-    def validate_against_schema(cls, v, values, **kwargs):
+    @field_validator('raw_response')
+    @classmethod
+    def validate_against_schema(cls, v, values):
         """
         This could be implemented to validate the raw_response against 
         the response_schema from the associated PromptSchema
