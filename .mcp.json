@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "structured-prompts": {
+      "command": "bun",
+      "args": ["run", "/Users/ebowwa/Desktop/codespaces/structured-prompts-ts/src/interfaces/mcp.ts"],
+      "env": {
+        "DATABASE_URL": "sqlite:///./structured_prompts.db"
+      }
+    }
+  }
+}

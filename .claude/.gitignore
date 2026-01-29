@@ -1,0 +1,12 @@
+# Claude Code local settings
+local.json
+LOCAL.local.json
+*.local.json
+
+# Session state
+session*.json
+state/
+
+# Temporary hook files
+*.tmp
+*.bak

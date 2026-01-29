@@ -1,0 +1,79 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/.claude/schema.json",
+  "hooks": {
+    "PostToolUse": {
+      "build_after_edit": {
+        "description": "Auto-run build after TypeScript files are modified",
+        "enabled": true,
+        "waitForExit": false,
+        "includeToolNames": ["Write", "Edit"],
+        "includePatterns": ["src/**/*.ts"],
+        "excludePatterns": ["src/**/*.test.ts", "src/**/*.spec.ts", "test/**/*.ts"],
+        "command": "cd {{workspaceFolder}} && bun run build",
+        "notification": {
+          "info": "Building TypeScript project...",
+          "success": "✓ Build completed",
+          "error": "✗ Build failed - check output"
+        }
+      },
+      "run_tests_after_edit": {
+        "description": "Auto-run tests after test files are modified",
+        "enabled": false,
+        "waitForExit": false,
+        "includeToolNames": ["Write", "Edit"],
+        "includePatterns": ["**/*.test.ts", "**/*.spec.ts", "test/**/*.ts"],
+        "command": "cd {{workspaceFolder}} && bun test",
+        "notification": {
+          "info": "Running tests...",
+          "success": "✓ Tests passed",
+          "error": "✗ Tests failed"
+        }
+      }
+    },
+    "PreToolUse": {
+      "format_before_git": {
+        "description": "Format TypeScript files before git operations",
+        "enabled": true,
+        "includeToolNames": ["Bash"],
+        "includePatterns": ["git commit*", "git add *"],
+        "command": "cd {{workspaceFolder}} && bun run build",
+        "notification": {
+          "info": "Formatting and building before git...",
+          "success": "✓ Ready for git",
+          "error": "✗ Build failed"
+        }
+      },
+      "confirm_database_deletion": {
+        "description": "Confirm before deleting database files",
+        "enabled": true,
+        "includeToolNames": ["Bash"],
+        "includePatterns": ["rm *.db", "rm *.sqlite*"],
+        "prompt": "You are about to delete database files. Are you sure?",
+        "requireConfirmation": true
+      }
+    },
+    "UserPromptSubmit": {
+      "prevent_source_deletion": {
+        "description": "Warn about deleting src files",
+        "enabled": true,
+        "includePatterns": ["delete src/", "remove src/", "rm src/"],
+        "prompt": "WARNING: You are about to delete source files. This is usually not what you want. Continue?",
+        "requireConfirmation": true
+      },
+      "prevent_package_deletion": {
+        "description": "Warn about deleting node_modules or package files",
+        "enabled": true,
+        "includePatterns": ["delete node_modules", "remove node_modules", "delete package.json", "delete bun.lockb"],
+        "prompt": "WARNING: You are about to delete dependency files. This will break the project. Continue?",
+        "requireConfirmation": true
+      }
+    },
+    "PreCompact": {
+      "preserve_source_maps": {
+        "description": "Don't compact source map files - they're generated",
+        "enabled": true,
+        "excludePatterns": ["dist/**/*.map", "**/*.d.ts.map"]
+      }
+    }
+  }
+}
