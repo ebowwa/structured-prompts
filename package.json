@@ -17,9 +17,25 @@
     "llm",
     "schema",
     "validation",
-    "mcp"
+    "mcp",
+    "typescript",
+    "structured",
+    "ai"
   ],
+  "author": "Ebowwa Labs <labs@ebowwa.com>",
   "license": "MIT",
+  "homepage": "https://github.com/ebowwa/codespaces/tree/main/packages/src/structured-prompts#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ebowwa/codespaces.git",
+    "directory": "packages/src/structured-prompts"
+  },
+  "bugs": {
+    "url": "https://github.com/ebowwa/codespaces/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^20.11.0",
@@ -34,8 +50,5 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }
