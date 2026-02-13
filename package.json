@@ -1,54 +1,29 @@
 {
-  "name": "structured-prompts",
-  "version": "0.1.0",
-  "description": "A modular package for managing structured prompts with TypeScript",
+  "name": "@ebowwa/structured-prompts",
+  "version": "0.2.2",
+  "description": "Minimal prompt template registry with MCP interface",
   "type": "module",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "scripts": {
-    "build": "tsc",
-    "dev": "bun --watch src/index.ts",
-    "test": "bun test",
-    "lint": "eslint src",
-    "mcp": "bun run src/interfaces/mcp.ts"
-  },
-  "keywords": [
-    "prompts",
-    "llm",
-    "schema",
-    "validation",
-    "mcp",
-    "typescript",
-    "structured",
-    "ai"
-  ],
-  "author": "Ebowwa Labs <labs@ebowwa.com>",
-  "license": "MIT",
-  "homepage": "https://github.com/ebowwa/codespaces/tree/main/packages/src/structured-prompts#readme",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ebowwa/codespaces.git",
-    "directory": "packages/src/structured-prompts"
-  },
-  "bugs": {
-    "url": "https://github.com/ebowwa/codespaces/issues"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/node": "^20.11.0",
-    "typescript": "^5.3.3"
+    "mcp": "bun run src/index.ts",
+    "seed": "bun run src/seed.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
-    "drizzle-orm": "^0.29.3",
-    "openai": "^6.16.0",
-    "postgres": "^3.4.3",
     "zod": "^3.22.4"
   },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  }
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "author": "Ebowwa Labs",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ebowwa/structured-prompts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ebowwa/structured-prompts/issues"
+  },
+  "homepage": "https://github.com/ebowwa/structured-prompts#readme"
 }
